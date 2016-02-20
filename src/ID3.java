@@ -131,10 +131,14 @@ public class ID3 {
 		if (bestAttribute != -1) {
 			Attribute bestAttr = attributes.get(bestAttribute);
 			root.setLabel(bestAttr.getAttrName());
-			int childCount = bestAttr.getDegree(); // modify this for continuous attributes
+			int childCount;
+			if (bestAttr.isContinuous()) {
+				childCount = 2;
+			} else {
+				childCount = bestAttr.getDegree();
+				attributes.get(bestAttribute).setAttrUsed();
+			}
 			root.setChildren(new Node[childCount]);
-			attributes.get(bestAttribute).setAttrUsed(); // change this to
-															// handle continuous
 		}
 		// create child nodes for the best attribute
 		return root;
