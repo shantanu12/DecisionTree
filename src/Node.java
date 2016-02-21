@@ -5,12 +5,14 @@ public class Node {
 	private Node parent;
 	private Node[] children;
 	private ArrayList<Record> data;
+	private String parentDecision;
 
 	public Node() {
 		setLabel("");
 		setParent(null);
 		setChildren(null);
 		this.data = new ArrayList<Record>();
+		setParentDecision("");
 	}
 
 	public void setLabel(String s) {
@@ -43,5 +45,13 @@ public class Node {
 
 	public Node[] getChildren() {
 		return children;
+	}
+
+	public void setParentDecision(String s) {
+		this.parentDecision = s;
+	}
+
+	public String getParentDecision() {
+		return this.parentDecision;
 	}
 }

@@ -1,0 +1,7 @@
+property,target-attribute,class
+property,missing-data,?
+continuous,sepal-length
+continuous,sepal-width
+continuous,petal-length
+continuous,petal-width
+discrete,class,Iris-setosa,Iris-versicolor,Iris-virginica

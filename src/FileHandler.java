@@ -46,7 +46,7 @@ public class FileHandler {
 						valuesPerAttribute.add(1);
 						ArrayList<String> values = new ArrayList<String>();
 						values.add("number");
-						attributes.add(new Attribute(parts[1], values, false));
+						attributes.add(new Attribute(parts[1], values, true));
 						attributeCount++;
 					}
 
@@ -83,7 +83,7 @@ public class FileHandler {
 				for (int j = 0; j < parts.length; j++) {
 					values.add(parts[j]);
 				}
-				records.add(new Record(lineNumber, values));
+				records.add(new Record(values));
 				lineNumber++;
 			}
 			br.close();

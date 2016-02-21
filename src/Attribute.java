@@ -15,6 +15,16 @@ public class Attribute {
 		this.isContinuous = isContinuous;
 	}
 
+	public Attribute(Attribute copy) {
+		this.attrName = copy.attrName;
+		this.values = new ArrayList<String>();
+		for (String v : copy.values) {
+			this.values.add(v);
+		}
+		this.isContinuous = copy.isContinuous;
+		this.attrUsed = copy.attrUsed;
+	}
+
 	public String getAttrName() {
 		return this.attrName;
 	}

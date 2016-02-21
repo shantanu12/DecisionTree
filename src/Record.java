@@ -1,11 +1,9 @@
 import java.util.ArrayList;
 
 public class Record {
-	private int recordID;
 	private ArrayList<String> values;
 
-	public Record(int id, ArrayList<String> val) {
-		this.recordID = id;
+	public Record(ArrayList<String> val) {
 		this.values = new ArrayList<String>();
 		for (String v : val) {
 			this.values.add(v);

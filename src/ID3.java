@@ -81,7 +81,7 @@ public class ID3 {
 						}
 						Collections.sort(values);
 						for (int a = 1; a < values.size(); a++) {
-							double midValue = (values.get(i - 1) + values.get(i)) / 2;
+							double midValue = (values.get(a - 1) + values.get(a)) / 2;
 							ArrayList<Record> subset1 = new ArrayList<Record>();
 							ArrayList<Record> subset2 = new ArrayList<Record>();
 							double subset1Entropy = 0.0;
@@ -89,7 +89,7 @@ public class ID3 {
 							ArrayList<Double> localEntropies = new ArrayList<Double>();
 							ArrayList<Integer> localSetSizes = new ArrayList<Integer>();
 							for (Record rec : root.getData()) {
-								if (midValue > Double.parseDouble(rec.getValue(i))) {
+								if (midValue >= Double.parseDouble(rec.getValue(i))) {
 									subset1.add(rec);
 								} else {
 									subset2.add(rec);
@@ -139,8 +139,102 @@ public class ID3 {
 				attributes.get(bestAttribute).setAttrUsed();
 			}
 			root.setChildren(new Node[childCount]);
+			if (!bestAttr.isContinuous()) {
+				for (int j = 0; j < childCount; j++) {
+					ArrayList<Record> childRecords = Utilities.subset(root, bestAttribute, bestAttr.getValue(j));
+					if ((childRecords.size() == 0) || (childRecords.size() == root.getData().size())) {
+						int targetCount[] = Utilities.targetCounter(targetDegree, root.getData(), targetAttributeIndex,
+								attributes);
+						int maxIndex = -1;
+						int maxCount = -1;
+						for (int t = 0; t < targetCount.length; t++) {
+							if (targetCount[t] > maxCount) {
+								maxCount = targetCount[t];
+								maxIndex = t;
+							}
+						}
+						root.setLabel(attributes.get(targetAttributeIndex).getValue(maxIndex));
+						root.setChildren(null);
+						return root;
+					} else {
+						ArrayList<Attribute> childAttributes = new ArrayList<Attribute>();
+						for (Attribute attr : attributes) {
+							childAttributes.add(new Attribute(attr));
+						}
+						root.getChildren()[j] = buildTree(childRecords, targetAttributeIndex, childAttributes);
+						root.getChildren()[j].setParent(root);
+						root.getChildren()[j].setParentDecision(bestAttr.getValue(j));
+					}
+
+				}
+			} else {
+				ArrayList<Record> subset1 = new ArrayList<Record>();
+				ArrayList<Record> subset2 = new ArrayList<Record>();
+				for (Record rec : root.getData()) {
+					if (bestContinuousValue >= Double.parseDouble(rec.getValue(bestAttribute))) {
+						subset1.add(rec);
+					} else {
+						subset2.add(rec);
+					}
+				}
+				ArrayList<Attribute> childAttributes = new ArrayList<Attribute>();
+				for (Attribute attr : attributes) {
+					childAttributes.add(new Attribute(attr));
+				}
+				root.getChildren()[0] = buildTree(subset1, targetAttributeIndex, childAttributes);
+				root.getChildren()[0].setParent(root);
+				root.getChildren()[0].setParentDecision("< " + bestContinuousValue);
+				root.getChildren()[1] = buildTree(subset2, targetAttributeIndex, childAttributes);
+				root.getChildren()[1].setParent(root);
+				root.getChildren()[1].setParentDecision("> " + bestContinuousValue);
+			}
+		} else {
+			return root;
 		}
-		// create child nodes for the best attribute
 		return root;
+	}
+
+	public void printTree(Node root, int targetAttributeIndex, ArrayList<Attribute> attributes, int spaceFactor) {
+		if (root.getChildren() != null) {
+			for (int i = 0; i < root.getChildren().length; i++) {
+				int targetDegree = attributes.get(targetAttributeIndex).getDegree();
+				int[] countKeeper = Utilities.targetCounter(targetDegree, root.getChildren()[i].getData(),
+						targetAttributeIndex, attributes);
+				String dataDistribution = " [";
+				for (int j = 0; j < countKeeper.length; j++) {
+					dataDistribution += countKeeper[j] + " " + attributes.get(targetAttributeIndex).getValue(j) + ", ";
+				}
+				dataDistribution = dataDistribution.substring(0, dataDistribution.length() - 2);
+				dataDistribution += "]";
+				for (int k = 0; k < spaceFactor; k++) {
+					System.out.print("\t");
+				}
+				System.out.print(root.getChildren()[i].getParent().getLabel() + " : "
+						+ root.getChildren()[i].getParentDecision() + dataDistribution);
+				System.out.print("\n");
+				spaceFactor++;
+				printTree(root.getChildren()[i], targetAttributeIndex, attributes, spaceFactor);
+				spaceFactor--;
+			}
+		} else {
+			int targetDegree = attributes.get(targetAttributeIndex).getDegree();
+			int[] countKeeper = Utilities.targetCounter(targetDegree, root.getData(), targetAttributeIndex, attributes);
+			String dataDistribution = " [";
+			for (int j = 0; j < countKeeper.length; j++) {
+				dataDistribution += countKeeper[j] + " " + attributes.get(targetAttributeIndex).getValue(j) + ", ";
+			}
+			dataDistribution = dataDistribution.substring(0, dataDistribution.length() - 2);
+			dataDistribution += "]";
+			for (int k = 0; k < spaceFactor; k++) {
+				System.out.print("\t");
+			}
+			System.out.print(
+					attributes.get(targetAttributeIndex).getAttrName() + " : " + root.getLabel() + dataDistribution);
+			System.out.print("\n");
+		}
+	}
+	
+	public void traverseTree(Node root, Record record){
+		
 	}
 }
