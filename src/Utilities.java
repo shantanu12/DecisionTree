@@ -46,4 +46,20 @@ public class Utilities {
 		}
 		return gain;
 	}
+	
+	public static void calculateStats(ArrayList<Double> error){
+		double sum = 0.0;
+		for (Double d : error) {
+			sum += d;
+		}
+		double meanError = sum / 10;
+		System.out.println("Mean Error: " + meanError);
+		for (Double d : error) {
+			sum += Math.pow((d - meanError), 2);
+		}
+		double standardDev = Math.sqrt(sum / 10);
+		System.out.println("Standard Deviation: " + standardDev);
+		double standardError = standardDev/Math.sqrt(10);
+		System.out.println("Standard Error: " + standardError);
+	}
 }

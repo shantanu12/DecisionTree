@@ -16,6 +16,8 @@ public class ID3 {
 		for (int t = 0; t < countKeeper.length; t++) {
 			if (countKeeper[t] == root.getData().size()) {
 				root.setLabel(attributes.get(targetAttributeIndex).getValue(t));
+				root.setLinkedAttribute(targetAttributeIndex);
+				root.setError(0);
 				return root;
 			}
 		}
@@ -37,6 +39,8 @@ public class ID3 {
 				}
 			}
 			root.setLabel(attributes.get(targetAttributeIndex).getValue(maxIndex));
+			root.setLinkedAttribute(targetAttributeIndex);
+			root.setError(root.getData().size() - maxCount);
 			return root;
 		}
 
@@ -131,6 +135,16 @@ public class ID3 {
 		if (bestAttribute != -1) {
 			Attribute bestAttr = attributes.get(bestAttribute);
 			root.setLabel(bestAttr.getAttrName());
+			root.setLinkedAttribute(bestAttribute);
+			int frequencyCount[] = Utilities.targetCounter(targetDegree, root.getData(), targetAttributeIndex,
+					attributes);
+			int maximumCount = -1;
+			for (int t = 0; t < frequencyCount.length; t++) {
+				if (frequencyCount[t] > maximumCount) {
+					maximumCount = frequencyCount[t];
+				}
+			}
+			root.setError(root.getData().size() - maximumCount);
 			int childCount;
 			if (bestAttr.isContinuous()) {
 				childCount = 2;
@@ -154,6 +168,8 @@ public class ID3 {
 							}
 						}
 						root.setLabel(attributes.get(targetAttributeIndex).getValue(maxIndex));
+						root.setLinkedAttribute(targetAttributeIndex);
+						root.setError(root.getData().size() - maxCount);
 						root.setChildren(null);
 						return root;
 					} else {
@@ -165,7 +181,6 @@ public class ID3 {
 						root.getChildren()[j].setParent(root);
 						root.getChildren()[j].setParentDecision(bestAttr.getValue(j));
 					}
-
 				}
 			} else {
 				ArrayList<Record> subset1 = new ArrayList<Record>();
@@ -184,9 +199,11 @@ public class ID3 {
 				root.getChildren()[0] = buildTree(subset1, targetAttributeIndex, childAttributes);
 				root.getChildren()[0].setParent(root);
 				root.getChildren()[0].setParentDecision("< " + bestContinuousValue);
+				root.getChildren()[0].setContinuousThreshold(bestContinuousValue);
 				root.getChildren()[1] = buildTree(subset2, targetAttributeIndex, childAttributes);
 				root.getChildren()[1].setParent(root);
 				root.getChildren()[1].setParentDecision("> " + bestContinuousValue);
+				root.getChildren()[1].setContinuousThreshold(bestContinuousValue);
 			}
 		} else {
 			return root;
@@ -233,8 +250,67 @@ public class ID3 {
 			System.out.print("\n");
 		}
 	}
-	
-	public void traverseTree(Node root, Record record){
-		
+
+	public String traverseTree(Node root, Record record, ArrayList<Attribute> attributes) {
+		String decision = "";
+		int attributeUnderTest = root.getLinkedAttribute();
+		if (root.getChildren() != null) {
+			if (!attributes.get(attributeUnderTest).isContinuous()) {
+				for (int i = 0; i < root.getChildren().length; i++) {
+					if (record.getValue(attributeUnderTest).equals(root.getChildren()[i].getParentDecision())) {
+						decision = traverseTree(root.getChildren()[i], record, attributes);
+					}
+				}
+			} else {
+				if (Double.parseDouble(record.getValue(attributeUnderTest)) <= root.getChildren()[0]
+						.getContinuousThreshold()) {
+					decision = traverseTree(root.getChildren()[0], record, attributes);
+				} else {
+					decision = traverseTree(root.getChildren()[1], record, attributes);
+				}
+			}
+		} else {
+			decision = root.getLabel();
+		}
+		return decision;
+	}
+
+	public void prune(Node root, int targetAttributeIndex, ArrayList<Attribute> attributes) {
+		if (root.getChildren() == null) {
+			return;
+		} else {
+			for (int i = 0; i < root.getChildren().length; i++) {
+				prune(root.getChildren()[i], targetAttributeIndex, attributes);
+			}
+			int childErrorSum = 0;
+			for (int i = 0; i < root.getChildren().length; i++) {
+				childErrorSum += root.getChildren()[i].getError();
+			}
+			double nt = root.getError() + 0.5;
+			double nTt = childErrorSum + root.getChildren().length / 2;
+			double standardError = Math.sqrt(nTt * (root.getData().size() - nTt) / root.getData().size());
+			if (nt > (nTt + standardError)) {
+				// do not prune the node - set error of this node as sum of
+				// error of children nodes
+				root.setError(childErrorSum);
+			} else {
+				// prune the node - remove children, change label to a decision
+				// value and set linked attribute as target attribute
+				root.setChildren(null);
+				int targetDegree = attributes.get(targetAttributeIndex).getDegree();
+				int[] countKeeper = Utilities.targetCounter(targetDegree, root.getData(), targetAttributeIndex,
+						attributes);
+				int maxIndex = -1;
+				int maxCount = -1;
+				for (int t = 0; t < countKeeper.length; t++) {
+					if (countKeeper[t] > maxCount) {
+						maxCount = countKeeper[t];
+						maxIndex = t;
+					}
+				}
+				root.setLabel(attributes.get(targetAttributeIndex).getValue(maxIndex));
+				root.setLinkedAttribute(targetAttributeIndex);
+			}
+		}
 	}
 }
