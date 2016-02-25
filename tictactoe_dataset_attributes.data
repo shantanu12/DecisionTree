@@ -1,0 +1,12 @@
+property,target-attribute,Class
+property,missing-data,?
+discrete,top-left-square,x,o,b
+discrete,top-middle-square,x,o,b
+discrete,top-right-square,x,o,b
+discrete,middle-left-square,x,o,b
+discrete,middle-middle-square,x,o,b
+discrete,middle-right-square,x,o,b
+discrete,bottom-left-square,x,o,b
+discrete,bottom-middle-square,x,o,b
+discrete,bottom-right-square,x,o,b
+discrete,Class,positive,negative

@@ -3,7 +3,7 @@ import java.util.ArrayList;
 public class Master {
 
 	public static void main(String[] args) {
-		String dataset = "iris"; // later change to args[0]
+		String dataset = args[0];
 		FileHandler reader = new FileHandler();
 		ArrayList<Attribute> attributes = new ArrayList<Attribute>();
 		ArrayList<Record> records = new ArrayList<Record>();
@@ -16,10 +16,25 @@ public class Master {
 			attributes = reader.readAttributes("iris_dataset_attributes.data");
 			records = reader.readData("iris_dataset_data.data");
 			break;
+		case "tictactoe":
+			attributes = reader.readAttributes("tictactoe_dataset_attributes.data");
+			records = reader.readData("tictactoe_dataset_data.data");
+			break;
+		case "banknote":
+			attributes = reader.readAttributes("banknote_authentication_dataset_attributes.data");
+			records = reader.readData("banknote_authentication_dataset_data.data");
+			break;
+		case "credit":
+			attributes = reader.readAttributes("credit_approval_dataset_attributes.data");
+			records = reader.readData("credit_approval_dataset_data.data");
+			break;
 		}
 		int split = records.size() / 10;
 		ArrayList<Double> error = new ArrayList<Double>();
 		ArrayList<Double> errorPostPruning = new ArrayList<Double>();
+		ArrayList<Integer> size = new ArrayList<Integer>();
+		ArrayList<Integer> sizePostPruning = new ArrayList<Integer>();
+		ArrayList<Double> majError = new ArrayList<Double>();
 		for (int i = 0; i < 10; i++) {
 			ArrayList<Record> buildList = new ArrayList<Record>();
 			ArrayList<Record> testList = new ArrayList<Record>();
@@ -49,39 +64,61 @@ public class Master {
 			}
 			ID3 tree = new ID3();
 			Node root = tree.buildTree(buildList, reader.targetAttributeIndex, attributes);
-			if (i == 0) {
-				System.out.println("-----BEFORE PRUNING-----");
-				tree.printTree(root, reader.targetAttributeIndex, attributes, 0);
+			System.out.println("Iteration " + (i + 1) + ":");
+			System.out.println("--------------\n");
+			System.out.println("-----BEFORE PRUNING-----");
+			size.add(tree.printTree(root, reader.targetAttributeIndex, attributes, 0));
+			int targetDegree = attributes.get(reader.targetAttributeIndex).getDegree();
+			int[] countKeeper = Utilities.targetCounter(targetDegree, buildList, reader.targetAttributeIndex,
+					attributes);
+			int maxIndex = -1;
+			int maxCount = -1;
+			for (int t = 0; t < countKeeper.length; t++) {
+				if (countKeeper[t] > maxCount) {
+					maxCount = countKeeper[t];
+					maxIndex = t;
+				}
 			}
+			String decision = attributes.get(reader.targetAttributeIndex).getValue(maxIndex);
 			int correct = 0;
+			int majCorrect = 0;
 			for (Record rec : testList) {
 				if (rec.getValue(reader.targetAttributeIndex).equals(tree.traverseTree(root, rec, attributes))) {
 					correct++;
 				}
+				if (rec.getValue(reader.targetAttributeIndex).equals(decision)) {
+					majCorrect++;
+				}
 			}
+			majError.add(100 - Utilities.round((majCorrect / (double) testList.size() * 100), 2));
 			tree.prune(root, reader.targetAttributeIndex, attributes);
-			if (i == 0) {
-				System.out.println("-----AFTER PRUNING-----");
-				tree.printTree(root, reader.targetAttributeIndex, attributes, 0);
-			}
-			System.out.println("-----BEFORE PRUNING-----");
-			double correctness = correct / (double) testList.size();
-			error.add(1 - correctness);
-			System.out.println("Iteration " + (i + 1) + ": Correctness: " + correctness);
-			System.out.println("-----AFTER PRUNING-----");
+			System.out.println("\n-----AFTER PRUNING-----");
+			sizePostPruning.add(tree.printTree(root, reader.targetAttributeIndex, attributes, 0));
+			System.out.print("\nBEFORE PRUNING-----");
+			double correctness = Utilities.round((correct / (double) testList.size() * 100), 2);
+			error.add(100 - correctness);
+			System.out.println("Correctness: " + correctness + "%");
+			System.out.print("AFTER PRUNING------");
 			correct = 0;
 			for (Record rec : testList) {
 				if (rec.getValue(reader.targetAttributeIndex).equals(tree.traverseTree(root, rec, attributes))) {
 					correct++;
 				}
 			}
-			correctness = correct / (double) testList.size();
-			errorPostPruning.add(1 - correctness);
-			System.out.println("Iteration " + (i + 1) + ": Correctness: " + correctness);
+			correctness = Utilities.round((correct / (double) testList.size() * 100), 2);
+			errorPostPruning.add(100 - correctness);
+			System.out.println("Correctness: " + correctness + "%\n");
 		}
+		System.out.println("----------OVERALL----------");
+		double sum = 0.0;
+		for (double d : majError) {
+			sum += d;
+		}
+		double meanError = Utilities.round(sum / 10, 2);
+		System.out.println("Mean Majority Classifier Error: " + meanError + "%");
 		System.out.println("-----BEFORE PRUNING-----");
-		Utilities.calculateStats(error);
+		Utilities.calculateStats(error, size);
 		System.out.println("-----AFTER PRUNING-----");
-		Utilities.calculateStats(errorPostPruning);
+		Utilities.calculateStats(errorPostPruning, sizePostPruning);
 	}
 }

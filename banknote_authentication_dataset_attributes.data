@@ -1,0 +1,7 @@
+property,target-attribute,class
+property,missing-data,?
+continuous,variance-of-Wavelet-Transformed-image
+continuous,skewness-of-Wavelet-Transformed-image
+continuous,curtosis-of-Wavelet-Transformed-image
+continuous,entropy-of-image
+discrete,class,0,1

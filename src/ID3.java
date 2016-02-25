@@ -211,7 +211,8 @@ public class ID3 {
 		return root;
 	}
 
-	public void printTree(Node root, int targetAttributeIndex, ArrayList<Attribute> attributes, int spaceFactor) {
+	public int printTree(Node root, int targetAttributeIndex, ArrayList<Attribute> attributes, int spaceFactor) {
+		int size = 0;
 		if (root.getChildren() != null) {
 			for (int i = 0; i < root.getChildren().length; i++) {
 				int targetDegree = attributes.get(targetAttributeIndex).getDegree();
@@ -230,7 +231,7 @@ public class ID3 {
 						+ root.getChildren()[i].getParentDecision() + dataDistribution);
 				System.out.print("\n");
 				spaceFactor++;
-				printTree(root.getChildren()[i], targetAttributeIndex, attributes, spaceFactor);
+				size += printTree(root.getChildren()[i], targetAttributeIndex, attributes, spaceFactor);
 				spaceFactor--;
 			}
 		} else {
@@ -248,7 +249,9 @@ public class ID3 {
 			System.out.print(
 					attributes.get(targetAttributeIndex).getAttrName() + " : " + root.getLabel() + dataDistribution);
 			System.out.print("\n");
+			return 1;
 		}
+		return size+1;
 	}
 
 	public String traverseTree(Node root, Record record, ArrayList<Attribute> attributes) {

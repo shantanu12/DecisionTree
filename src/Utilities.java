@@ -46,20 +46,40 @@ public class Utilities {
 		}
 		return gain;
 	}
-	
-	public static void calculateStats(ArrayList<Double> error){
+
+	public static void calculateStats(ArrayList<Double> error, ArrayList<Integer> size) {
 		double sum = 0.0;
+		int sumSize = 0;
+		for (int i : size) {
+			sumSize += i;
+		}
+		int meanSize = sumSize / 10;
+		System.out.println("Mean Size: " + meanSize + " Nodes");
 		for (Double d : error) {
 			sum += d;
 		}
-		double meanError = sum / 10;
-		System.out.println("Mean Error: " + meanError);
+		double meanError = round(sum / 10, 2);
+		System.out.println("Mean Error: " + meanError + "%");
+		sum = 0.0;
 		for (Double d : error) {
 			sum += Math.pow((d - meanError), 2);
 		}
-		double standardDev = Math.sqrt(sum / 10);
-		System.out.println("Standard Deviation: " + standardDev);
-		double standardError = standardDev/Math.sqrt(10);
-		System.out.println("Standard Error: " + standardError);
+		double standardDev = round(Math.sqrt(sum / 10), 2);
+		System.out.println("Standard Deviation: " + standardDev + "%");
+		double standardError = round(standardDev / Math.sqrt(10), 2);
+		System.out.println("Standard Error: " + standardError + "%");
+		double CILower = round(meanError - 2.23 * standardError, 2);
+		double CIUpper = round(meanError + 2.23 * standardError, 2);
+		System.out.println("Confidence Interval: " + CILower + "%" + "-" + CIUpper + "%");
+	}
+
+	public static double round(double value, int places) {
+		if (places < 0)
+			throw new IllegalArgumentException();
+
+		long factor = (long) Math.pow(10, places);
+		value = value * factor;
+		long tmp = Math.round(value);
+		return (double) tmp / factor;
 	}
 }
